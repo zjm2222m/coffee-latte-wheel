@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160">
+  <rect width="160" height="160" rx="80" fill="#b94a5a"/>
+  <circle cx="80" cy="80" r="58" fill="#fff8ec"/>
+  <path d="M80 121c-23-18-35-41-31-61 2-11 11-18 22-9 4 3 7 7 9 12 2-5 5-9 9-12 11-9 20-2 22 9 4 20-8 43-31 61Z" fill="none" stroke="#b94a5a" stroke-width="9" stroke-linejoin="round"/>
+  <path d="M80 118V61M60 76c9 1 16 6 20 14M100 76c-9 1-16 6-20 14M57 94c10 0 18 4 23 12M103 94c-10 0-18 4-23 12" fill="none" stroke="#b94a5a" stroke-width="6" stroke-linecap="round"/>
+  <text x="80" y="143" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="800" fill="#fff8ec">树叶拉花</text>
+</svg>
