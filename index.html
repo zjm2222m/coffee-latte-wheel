@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>咖啡拉花转盘</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="wheel-stage" aria-labelledby="app-title">
+        <div class="title-row">
+          <div>
+            <p class="eyebrow">Latte Art Wheel</p>
+            <h1 id="app-title">咖啡拉花转盘</h1>
+          </div>
+          <div class="title-actions">
+            <button class="manage-button" id="backendToggle" type="button" aria-controls="backendPanel" aria-expanded="false">后台管理</button>
+            <button class="icon-button" id="shuffleButton" type="button" aria-label="随机高亮一个咖啡拉花"><span aria-hidden="true">↻</span></button>
+          </div>
+        </div>
+        <div class="wheel-wrap">
+          <div class="pointer" aria-hidden="true"></div>
+          <div class="wheel" id="wheel" aria-label="8 个咖啡拉花选项转盘"></div>
+          <button class="spin-button" id="spinButton" type="button"><span aria-hidden="true">↻</span><span>转一下</span></button>
+        </div>
+        <div class="result-panel" aria-live="polite"><span class="result-kicker">Try this</span><strong id="resultName">先转一下</strong></div>
+      </section>
+      <aside class="control-panel" id="backendPanel" aria-labelledby="upload-title" aria-hidden="true">
+        <div class="panel-header"><div><p class="eyebrow">Backend</p><h2 id="upload-title">后台管理</h2></div><button class="icon-button close-button" id="backendClose" type="button" aria-label="关闭后台管理">×</button></div>
+        <div class="api-note"><span>可修改每个咖啡拉花的名称，并上传对应图片。</span></div>
+        <div class="slot-list" id="slotList"></div>
+      </aside>
+    </main>
+    <script src="./app.js"></script>
+  </body>
+</html>
