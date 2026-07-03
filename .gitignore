@@ -1,0 +1,4 @@
+.codex/
+data/
+.DS_Store
+node_modules/
