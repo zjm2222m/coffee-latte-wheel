@@ -35,11 +35,23 @@ const mimeExtensions = {
   "image/svg+xml": "svg"
 };
 
-const defaultSlotNames = ["天鹅拉花", "爱心拉花", "郁金香拉花", "树叶拉花", "小熊拉花", "玫瑰拉花", "海马拉花", "蝴蝶拉花"];
+const defaultSlotNames = [
+  "天鹅拉花",
+  "爱心拉花",
+  "郁金香拉花",
+  "树叶拉花",
+  "小熊拉花",
+  "玫瑰拉花",
+  "海马拉花",
+  "蝴蝶拉花"
+];
 
 function sendJson(res, statusCode, payload) {
   const body = JSON.stringify(payload);
-  res.writeHead(statusCode, { "content-type": "application/json; charset=utf-8", "content-length": Buffer.byteLength(body) });
+  res.writeHead(statusCode, {
+    "content-type": "application/json; charset=utf-8",
+    "content-length": Buffer.byteLength(body)
+  });
   res.end(body);
 }
 
@@ -47,6 +59,7 @@ function readBody(req) {
   return new Promise((resolve, reject) => {
     const chunks = [];
     let total = 0;
+
     req.on("data", chunk => {
       total += chunk.length;
       if (total > MAX_BODY_BYTES) {
@@ -56,6 +69,7 @@ function readBody(req) {
       }
       chunks.push(chunk);
     });
+
     req.on("end", () => resolve(Buffer.concat(chunks).toString("utf8")));
     req.on("error", reject);
   });
@@ -63,20 +77,33 @@ function readBody(req) {
 
 function parseDataUrl(dataUrl) {
   const match = /^data:([^;,]+);base64,([A-Za-z0-9+/=\s]+)$/.exec(dataUrl || "");
-  if (!match) throw new Error("Expected an image dataUrl in base64 format.");
+  if (!match) {
+    throw new Error("Expected an image dataUrl in base64 format.");
+  }
+
   const mime = match[1].toLowerCase();
   const ext = mimeExtensions[mime];
-  if (!ext) throw new Error("Only PNG, JPG, WEBP, and SVG uploads are supported.");
-  return { mime, ext, buffer: Buffer.from(match[2].replace(/\s/g, ""), "base64") };
+  if (!ext) {
+    throw new Error("Only PNG, JPG, WEBP, and SVG uploads are supported.");
+  }
+
+  return {
+    mime,
+    ext,
+    buffer: Buffer.from(match[2].replace(/\s/g, ""), "base64")
+  };
 }
 
 function readSlotNames() {
   try {
     const data = JSON.parse(fs.readFileSync(SLOT_DATA_PATH, "utf8"));
-    if (Array.isArray(data.names)) return defaultSlotNames.map((name, index) => String(data.names[index] || name).slice(0, 20));
+    if (Array.isArray(data.names)) {
+      return defaultSlotNames.map((name, index) => String(data.names[index] || name).slice(0, 20));
+    }
   } catch (error) {
     return defaultSlotNames;
   }
+
   return defaultSlotNames;
 }
 
@@ -90,6 +117,7 @@ function writeSlotName(id, name) {
 function getSlots() {
   const uploads = new Map();
   const names = readSlotNames();
+
   for (const filename of fs.readdirSync(UPLOAD_DIR)) {
     const match = /^slot-(\d+)\.(png|jpg|jpeg|webp|svg)$/.exec(filename);
     if (match) {
@@ -98,76 +126,133 @@ function getSlots() {
       uploads.set(Number(match[1]), `/uploads/${filename}?v=${version}`);
     }
   }
+
   return Array.from({ length: SLOT_COUNT }, (_, index) => {
     const id = index + 1;
-    return { id, name: names[index], imageUrl: uploads.get(id) || null, uploadKey: `slot_${id}_image` };
+    return {
+      id,
+      name: names[index],
+      imageUrl: uploads.get(id) || null,
+      uploadKey: `slot_${id}_image`
+    };
   });
 }
 
 function serveStatic(req, res, pathname) {
   const requested = pathname === "/" ? "/index.html" : pathname;
   const filePath = path.normalize(path.join(PUBLIC_DIR, requested));
+
   if (!filePath.startsWith(PUBLIC_DIR)) {
     sendJson(res, 403, { error: "Forbidden" });
     return;
   }
+
   fs.readFile(filePath, (error, data) => {
     if (error) {
       sendJson(res, 404, { error: "Not found" });
       return;
     }
-    res.writeHead(200, { "content-type": contentTypes[path.extname(filePath).toLowerCase()] || "application/octet-stream", "cache-control": "no-cache" });
+
+    const ext = path.extname(filePath).toLowerCase();
+    res.writeHead(200, {
+      "content-type": contentTypes[ext] || "application/octet-stream",
+      "cache-control": "no-cache"
+    });
     res.end(data);
   });
 }
 
 async function handleApi(req, res, pathname) {
   if (req.method === "GET" && pathname === "/api/slots") {
-    sendJson(res, 200, { slots: getSlots(), upload: { method: "POST", path: "/api/slots/:id/image", body: { key: "slot_<id>_image", dataUrl: "data:image/png;base64,..." } }, rename: { method: "PATCH", path: "/api/slots/:id", body: { name: "咖啡拉花名称" } } });
+    sendJson(res, 200, {
+      slots: getSlots(),
+      upload: {
+        method: "POST",
+        path: "/api/slots/:id/image",
+        body: {
+          key: "slot_<id>_image",
+          dataUrl: "data:image/png;base64,..."
+        }
+      },
+      rename: {
+        method: "PATCH",
+        path: "/api/slots/:id",
+        body: {
+          name: "咖啡拉花名称"
+        }
+      }
+    });
     return;
   }
+
   const slotMatch = /^\/api\/slots\/(\d+)$/.exec(pathname);
   if (req.method === "PATCH" && slotMatch) {
     const id = Number(slotMatch[1]);
-    if (!Number.isInteger(id) || id < 1 || id > SLOT_COUNT) return sendJson(res, 400, { error: "Slot id must be between 1 and 8." });
+    if (!Number.isInteger(id) || id < 1 || id > SLOT_COUNT) {
+      sendJson(res, 400, { error: "Slot id must be between 1 and 8." });
+      return;
+    }
+
     try {
       const body = JSON.parse(await readBody(req));
-      sendJson(res, 200, { slot: id, name: writeSlotName(id, body.name) });
+      const name = writeSlotName(id, body.name);
+      sendJson(res, 200, { slot: id, name });
     } catch (error) {
       sendJson(res, 400, { error: error.message });
     }
     return;
   }
+
   const uploadMatch = /^\/api\/slots\/(\d+)\/image$/.exec(pathname);
   if (req.method === "POST" && uploadMatch) {
     const id = Number(uploadMatch[1]);
-    if (!Number.isInteger(id) || id < 1 || id > SLOT_COUNT) return sendJson(res, 400, { error: "Slot id must be between 1 and 8." });
+    if (!Number.isInteger(id) || id < 1 || id > SLOT_COUNT) {
+      sendJson(res, 400, { error: "Slot id must be between 1 and 8." });
+      return;
+    }
+
     try {
       const body = JSON.parse(await readBody(req));
       const expectedKey = `slot_${id}_image`;
-      if (body.key && body.key !== expectedKey) return sendJson(res, 400, { error: `Upload key must be ${expectedKey}.` });
+
+      if (body.key && body.key !== expectedKey) {
+        sendJson(res, 400, { error: `Upload key must be ${expectedKey}.` });
+        return;
+      }
+
       const image = parseDataUrl(body.dataUrl);
+
       for (const ext of ["png", "jpg", "jpeg", "webp", "svg"]) {
         const oldPath = path.join(UPLOAD_DIR, `slot-${id}.${ext}`);
-        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+        if (fs.existsSync(oldPath)) {
+          fs.unlinkSync(oldPath);
+        }
       }
+
       const filename = `slot-${id}.${image.ext}`;
       fs.writeFileSync(path.join(UPLOAD_DIR, filename), image.buffer);
-      sendJson(res, 200, { slot: id, uploadKey: expectedKey, imageUrl: `/uploads/${filename}?v=${Date.now()}` });
+      sendJson(res, 200, {
+        slot: id,
+        uploadKey: expectedKey,
+        imageUrl: `/uploads/${filename}?v=${Date.now()}`
+      });
     } catch (error) {
       sendJson(res, 400, { error: error.message });
     }
     return;
   }
+
   sendJson(res, 404, { error: "Unknown API route" });
 }
 
 const server = http.createServer((req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
+
   if (url.pathname.startsWith("/api/")) {
     handleApi(req, res, url.pathname);
     return;
   }
+
   serveStatic(req, res, url.pathname);
 });
 
