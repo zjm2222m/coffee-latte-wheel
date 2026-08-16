@@ -36,14 +36,14 @@ const mimeExtensions = {
 };
 
 const defaultSlotNames = [
-  "天鹅拉花",
-  "爱心拉花",
-  "郁金香拉花",
-  "树叶拉花",
-  "小熊拉花",
+  "鹦鹉拉花",
+  "向日葵拉花",
+  "小狗拉花",
+  "小猫拉花",
+  "熊猫拉花",
   "玫瑰拉花",
-  "海马拉花",
-  "蝴蝶拉花"
+  "飞马拉花",
+  "骆驼拉花"
 ];
 
 function sendJson(res, statusCode, payload) {
@@ -117,13 +117,17 @@ function writeSlotName(id, name) {
 function getSlots() {
   const uploads = new Map();
   const names = readSlotNames();
+  const preferredExtensions = ["jpg", "jpeg", "png", "webp", "svg"];
 
-  for (const filename of fs.readdirSync(UPLOAD_DIR)) {
-    const match = /^slot-(\d+)\.(png|jpg|jpeg|webp|svg)$/.exec(filename);
-    if (match) {
+  for (let id = 1; id <= SLOT_COUNT; id += 1) {
+    for (const ext of preferredExtensions) {
+      const filename = `slot-${id}.${ext}`;
       const filePath = path.join(UPLOAD_DIR, filename);
-      const version = Math.round(fs.statSync(filePath).mtimeMs);
-      uploads.set(Number(match[1]), `/uploads/${filename}?v=${version}`);
+      if (fs.existsSync(filePath)) {
+        const version = Math.round(fs.statSync(filePath).mtimeMs);
+        uploads.set(id, `/uploads/${filename}?v=${version}`);
+        break;
+      }
     }
   }
 

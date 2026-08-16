@@ -10,30 +10,38 @@
     <main class="app-shell">
       <section class="wheel-stage" aria-labelledby="app-title">
         <div class="title-row">
-          <div>
-            <p class="eyebrow">Latte Art Wheel</p>
-            <h1 id="app-title">咖啡拉花转盘</h1>
-          </div>
-          <div class="title-actions">
-            <button class="manage-button" id="backendToggle" type="button" aria-controls="backendPanel" aria-expanded="false">后台管理</button>
-            <button class="icon-button" id="shuffleButton" type="button" aria-label="随机高亮一个咖啡拉花">
-              <span aria-hidden="true">↻</span>
-            </button>
+          <div class="brand-lockup">
+            <img class="brand-logo" src="./uploads/royal-cat-coffee.jpg" alt="皇家猫屎一号咖啡标志">
+            <div class="brand-copy-block">
+              <p class="eyebrow">Royal Cat Coffee</p>
+              <h1 id="app-title">皇家猫屎一号咖啡</h1>
+              <p class="page-kicker">咖啡拉花转盘</p>
+            </div>
           </div>
         </div>
 
         <div class="wheel-wrap">
           <div class="pointer" aria-hidden="true"></div>
           <div class="wheel" id="wheel" aria-label="8 个咖啡拉花选项转盘"></div>
-          <button class="spin-button" id="spinButton" type="button">
-            <span aria-hidden="true">↻</span>
-            <span>转一下</span>
+          <button class="spin-button" id="spinButton" type="button" aria-label="转一下">
+            <span class="spin-button-text">开始</span>
           </button>
         </div>
 
         <div class="result-panel" aria-live="polite">
-          <span class="result-kicker">Try this</span>
-          <strong id="resultName">先转一下</strong>
+          <div class="result-copy">
+            <strong id="resultName">点击转盘开始</strong>
+          </div>
+          <div class="result-preview" aria-hidden="true">
+            <img id="resultImage" src="./uploads/slot-1.jpg" alt="">
+          </div>
+        </div>
+
+        <div class="floating-actions">
+          <button class="manage-button" id="backendToggle" type="button" aria-controls="backendPanel" aria-expanded="false" aria-label="后台管理"><span class="manage-dot" aria-hidden="true"></span></button>
+          <button class="icon-button" id="shuffleButton" type="button" aria-label="随机高亮一个咖啡拉花">
+            <span aria-hidden="true">↻</span>
+          </button>
         </div>
       </section>
 

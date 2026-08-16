@@ -1,12 +1,12 @@
 const slotNames = [
-  "天鹅拉花",
-  "爱心拉花",
-  "郁金香拉花",
-  "树叶拉花",
-  "小熊拉花",
+  "鹦鹉拉花",
+  "向日葵拉花",
+  "小狗拉花",
+  "小猫拉花",
+  "熊猫拉花",
   "玫瑰拉花",
-  "海马拉花",
-  "蝴蝶拉花"
+  "飞马拉花",
+  "骆驼拉花"
 ];
 
 const wheel = document.querySelector("#wheel");
@@ -14,6 +14,7 @@ const slotList = document.querySelector("#slotList");
 const spinButton = document.querySelector("#spinButton");
 const shuffleButton = document.querySelector("#shuffleButton");
 const resultName = document.querySelector("#resultName");
+const resultImage = document.querySelector("#resultImage");
 const backendToggle = document.querySelector("#backendToggle");
 const backendClose = document.querySelector("#backendClose");
 const backendPanel = document.querySelector("#backendPanel");
@@ -28,11 +29,13 @@ const cropSave = document.querySelector("#cropSave");
 const filePreviewMode = window.location.protocol === "file:";
 const hasBackend = ["127.0.0.1", "localhost"].includes(window.location.hostname);
 const cropImageTypes = ["image/png", "image/jpeg", "image/webp"];
+const backendPassword = "987654321";
 
 let slots = [];
 let currentRotation = 0;
 let activeIndex = -1;
 let resizeFrame = 0;
+let resultEffectTimer = 0;
 
 const cropState = {
   slotId: null,
@@ -95,6 +98,19 @@ function imageFor(slot) {
   return slot.imageUrl || placeholderSvg(slot);
 }
 
+function attachSlotImageFallback(img, slot) {
+  let triedSvgFallback = false;
+  img.addEventListener("error", () => {
+    if (!triedSvgFallback && !String(img.src).includes(`slot-${slot.id}.svg`)) {
+      triedSvgFallback = true;
+      img.src = `./uploads/slot-${slot.id}.svg`;
+      return;
+    }
+
+    img.src = placeholderSvg(slot);
+  });
+}
+
 async function loadSlots() {
   if (filePreviewMode || !hasBackend) {
     slots = defaultSlots();
@@ -110,6 +126,14 @@ async function loadSlots() {
 
   renderWheel();
   renderSlotList();
+
+  if (slots.length && activeIndex === -1) {
+    resultImage.src = imageFor(slots[0]);
+    resultImage.alt = `${slots[0].name} 结果图`;
+  } else if (slots[activeIndex]) {
+    resultImage.src = imageFor(slots[activeIndex]);
+    resultImage.alt = `${slots[activeIndex].name} 结果图`;
+  }
 }
 
 function renderWheel() {
@@ -126,6 +150,7 @@ function renderWheel() {
     img.className = "slot-image";
     img.src = imageFor(slot);
     img.alt = `${slot.name} 图片`;
+    attachSlotImageFallback(img, slot);
 
     const label = document.createElement("span");
     label.className = "slot-label";
@@ -143,8 +168,22 @@ function renderWheel() {
 }
 
 function updateSlotRadius() {
-  const radiusRatio = wheel.clientWidth <= 420 ? 0.34 : 0.33;
-  const radius = Math.max(104, Math.round(wheel.clientWidth * radiusRatio));
+  const width = wheel.clientWidth;
+  const height = wheel.clientHeight;
+  const baseSize = Math.min(width, height);
+
+  let radiusRatio = 0.328;
+  let minRadius = 86;
+
+  if (baseSize <= 302) {
+    radiusRatio = 0.3;
+    minRadius = 78;
+  } else if (baseSize <= 334) {
+    radiusRatio = 0.314;
+    minRadius = 82;
+  }
+
+  const radius = Math.max(minRadius, Math.round(baseSize * radiusRatio));
   for (const marker of document.querySelectorAll(".slot-marker")) {
     const angle = Number(marker.dataset.angle || 0) * Math.PI / 180;
     marker.style.setProperty("--x", `${Math.sin(angle) * radius}px`);
@@ -162,6 +201,7 @@ function renderSlotList() {
     const img = document.createElement("img");
     img.src = imageFor(slot);
     img.alt = `${slot.name} 预览`;
+    attachSlotImageFallback(img, slot);
 
     const editor = document.createElement("div");
     editor.className = "slot-editor";
@@ -470,10 +510,26 @@ async function saveCroppedImage() {
   }
 }
 
+function triggerResultEffect() {
+  const panel = resultName.closest(".result-panel");
+  if (!panel) return;
+
+  panel.classList.remove("is-revealed");
+  window.clearTimeout(resultEffectTimer);
+  void panel.offsetWidth;
+  panel.classList.add("is-revealed");
+  resultEffectTimer = window.setTimeout(() => {
+    panel.classList.remove("is-revealed");
+  }, 760);
+}
+
 function updateResult(index) {
   activeIndex = index;
   const slot = slots[index];
-  resultName.textContent = slot.name;
+  resultName.textContent = `恭喜您抽到 ${slot.name}啦`;
+  resultImage.src = imageFor(slot);
+  resultImage.alt = `${slot.name} 结果图`;
+  triggerResultEffect();
 }
 
 function spinTo(index = Math.floor(Math.random() * slots.length)) {
@@ -496,7 +552,32 @@ function spinTo(index = Math.floor(Math.random() * slots.length)) {
   }, window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 260 : 2350);
 }
 
+function isBackendUnlocked() {
+  return sessionStorage.getItem("coffee_backend_unlocked") === "true";
+}
+
+function unlockBackend() {
+  if (isBackendUnlocked()) {
+    return true;
+  }
+
+  const password = window.prompt("请输入后台管理密码");
+  if (password === backendPassword) {
+    sessionStorage.setItem("coffee_backend_unlocked", "true");
+    return true;
+  }
+
+  if (password !== null) {
+    alert("密码错误");
+  }
+  return false;
+}
+
 function setBackendOpen(isOpen) {
+  if (isOpen && !unlockBackend()) {
+    return;
+  }
+
   backendPanel.classList.toggle("is-open", isOpen);
   backendPanel.setAttribute("aria-hidden", String(!isOpen));
   backendToggle.setAttribute("aria-expanded", String(isOpen));
